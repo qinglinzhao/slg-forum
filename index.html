@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SLG 战略前线 | 策略游戏行业门户</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e14;
+            --bg-secondary: #121820;
+            --bg-card: rgba(18, 24, 32, 0.85);
+            --border-color: rgba(212, 175, 55, 0.3);
+            --border-glow: rgba(212, 175, 55, 0.6);
+            --accent-gold: #d4af37;
+            --accent-copper: #b87333;
+            --accent-bronze: #cd7f32;
+            --text-primary: #e8e6e3;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --danger: #ef4444;
+            --success: #22c55e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Map Grid Background */
+        .map-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.15;
+            background-image: 
+                linear-gradient(rgba(212, 175, 55, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(212, 175, 55, 0.1) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+
+        .map-grid::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at 50% 0%, rgba(212, 175, 55, 0.08) 0%, transparent 60%);
+        }
+
+        /* Floating Particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: var(--accent-gold);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+            10% { opacity: 0.3; }
+            90% { opacity: 0.3; }
+            100% { transform: translateY(-100vh) translateX(100px); opacity: 0; }
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: linear-gradient(180deg, var(--bg-primary) 0%, transparent 100%);
+            padding: 1rem 2rem;
+            transition: all 0.3s ease;
+        }
+
+        nav.scrolled {
+            background: rgba(10, 14, 20, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-copper) 100%);
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 1.2rem;
+            color: var(--bg-primary);
+        }
+
+        .logo-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: 2px;
+        }
+
+        .logo-text span {
+            color: var(--accent-gold);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            padding: 0.5rem 0;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-gold), var(--accent-copper));
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-gold);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .nav-cta {
+            background: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-copper) 100%);
+            color: var(--bg-primary);
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+        }
+
+        .nav-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(212, 175, 55, 0.5);
+        }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8rem 2rem 4rem;
+        }
+
+        .hero-content {
+            max-width: 900px;
+            text-align: center;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1.25rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            color: var(--accent-gold);
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .hero-badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .hero h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 0.8s ease 0.1s both;
+        }
+
+        .hero h1 .highlight {
+            background: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-bronze) 50%, var(--accent-copper) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-desc {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 2.5rem;
+            animation: fadeInUp 0.8s ease 0.2s both;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.8s ease 0.3s both;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent-gold);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Sections */
+        section {
+            position: relative;
+            z-index: 2;
+            padding: 5rem 2rem;
+        }
+
+        .section-header {
+            max-width: 1400px;
+            margin: 0 auto 3rem;
+            text-align: center;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-title::before,
+        .section-title::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 60px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-gold));
+        }
+
+        .section-title::before {
+            right: calc(100% + 1rem);
+            background: linear-gradient(90deg, transparent, var(--accent-gold));
+        }
+
+        .section-title::after {
+            left: calc(100% + 1rem);
+            background: linear-gradient(90deg, var(--accent-gold), transparent);
+        }
+
+        /* Forum Sections Grid */
+        .forum-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .forum-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            cursor: pointer;
+        }
+
+        .forum-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-gold), var(--accent-copper));
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+
+        .forum-card:hover {
+            border-color: var(--border-glow);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(212, 175, 55, 0.15);
+        }
+
+        .forum-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .forum-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            margin-bottom: 1.25rem;
+            position: relative;
+        }
+
+        .forum-icon.planning {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.1));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .forum-icon.publishing {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1));
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .forum-icon.art {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(168, 85, 247, 0.1));
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+
+        .forum-icon.tech {
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(236, 72, 153, 0.1));
+            border: 1px solid rgba(236, 72, 153, 0.3);
+        }
+
+        .forum-card h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
+        }
+
+        .forum-card p {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            line-height: 1.7;
+        }
+
+        .forum-meta {
+            display: flex;
+            gap: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .forum-meta-item {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .forum-meta-item strong {
+            color: var(--text-secondary);
+        }
+
+        /* Featured Posts */
+        .featured-posts {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .posts-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .posts-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover,
+        .tab-btn.active {
+            background: rgba(212, 175, 55, 0.1);
+            border-color: var(--accent-gold);
+            color: var(--accent-gold);
+        }
+
+        .posts-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .post-item {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 1.5rem;
+            align-items: center;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.25rem 1.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .post-item:hover {
+            border-color: var(--border-glow);
+            background: rgba(212, 175, 55, 0.03);
+        }
+
+        .post-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-copper));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--bg-primary);
+        }
+
+        .post-content h4 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 0.35rem;
+            color: var(--text-primary);
+        }
+
+        .post-content h4:hover {
+            color: var(--accent-gold);
+        }
+
+        .post-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .post-tag {
+            background: rgba(212, 175, 55, 0.1);
+            color: var(--accent-gold);
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+
+        .post-stats {
+            display: flex;
+            gap: 1.25rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .post-stats span {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        /* Industry News */
+        .news-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .news-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+
+        .news-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .news-image {
+            height: 180px;
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary));
+            position: relative;
+            overflow: hidden;
+        }
+
+        .news-image::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(212, 175, 55, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 50%, rgba(184, 115, 51, 0.15) 0%, transparent 50%);
+        }
+
+        .news-badge {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: rgba(212, 175, 55, 0.9);
+            color: var(--bg-primary);
+            padding: 0.35rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .news-body {
+            padding: 1.5rem;
+        }
+
+        .news-date {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+        }
+
+        .news-title {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            line-height: 1.4;
+        }
+
+        .news-title:hover {
+            color: var(--accent-gold);
+        }
+
+        .news-excerpt {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Subscribe Section */
+        .subscribe-section {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.05) 0%, transparent 50%);
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .subscribe-container {
+            max-width: 700px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .subscribe-container h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .subscribe-container p {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .subscribe-form {
+            display: flex;
+            gap: 1rem;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .subscribe-form input {
+            flex: 1;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1rem 1.25rem;
+            font-size: 1rem;
+            color: var(--text-primary);
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .subscribe-form input:focus {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+        }
+
+        .subscribe-form input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .subscribe-form button {
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-copper));
+            color: var(--bg-primary);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .subscribe-form button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(212, 175, 55, 0.4);
+        }
+
+        /* Footer */
+        footer {
+            position: relative;
+            z-index: 2;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: 4rem 2rem 2rem;
+        }
+
+        .footer-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr repeat(3, 1fr);
+            gap: 3rem;
+        }
+
+        .footer-brand {
+            max-width: 350px;
+        }
+
+        .footer-brand .logo {
+            margin-bottom: 1.25rem;
+        }
+
+        .footer-brand p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        .footer-column h4 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+            color: var(--text-primary);
+        }
+
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent-gold);
+        }
+
+        .footer-bottom {
+            max-width: 1400px;
+            margin: 3rem auto 0;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .footer-bottom p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .social-links a {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .social-links a:hover {
+            border-color: var(--accent-gold);
+            color: var(--accent-gold);
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .footer-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .footer-brand {
+                grid-column: span 2;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero-stats {
+                gap: 2rem;
+            }
+
+            .post-item {
+                grid-template-columns: auto 1fr;
+            }
+
+            .post-stats {
+                display: none;
+            }
+
+            .subscribe-form {
+                flex-direction: column;
+            }
+
+            .footer-container {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-brand {
+                grid-column: span 1;
+            }
+        }
+
+        /* Animations */
+        .forum-card {
+            animation: fadeInUp 0.6s ease backwards;
+        }
+
+        .forum-card:nth-child(1) { animation-delay: 0.1s; }
+        .forum-card:nth-child(2) { animation-delay: 0.2s; }
+        .forum-card:nth-child(3) { animation-delay: 0.3s; }
+        .forum-card:nth-child(4) { animation-delay: 0.4s; }
+
+        .news-card {
+            animation: fadeInUp 0.6s ease backwards;
+        }
+
+        .news-card:nth-child(1) { animation-delay: 0.1s; }
+        .news-card:nth-child(2) { animation-delay: 0.2s; }
+        .news-card:nth-child(3) { animation-delay: 0.3s; }
+    </style>
+</head>
+<body>
+    <!-- Background Elements -->
+    <div class="map-grid"></div>
+    <div class="particles">
+        <div class="particle" style="left: 10%; animation-delay: 0s;"></div>
+        <div class="particle" style="left: 20%; animation-delay: 2s;"></div>
+        <div class="particle" style="left: 30%; animation-delay: 4s;"></div>
+        <div class="particle" style="left: 40%; animation-delay: 1s;"></div>
+        <div class="particle" style="left: 50%; animation-delay: 3s;"></div>
+        <div class="particle" style="left: 60%; animation-delay: 5s;"></div>
+        <div class="particle" style="left: 70%; animation-delay: 2.5s;"></div>
+        <div class="particle" style="left: 80%; animation-delay: 4.5s;"></div>
+        <div class="particle" style="left: 90%; animation-delay: 1.5s;"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <a href="#" class="logo">
+                <div class="logo-icon">SLG</div>
+                <span class="logo-text">战略<span>前线</span></span>
+            </a>
+            <div class="nav-links">
+                <a href="#forums">论坛板块</a>
+                <a href="#featured">精华帖子</a>
+                <a href="#news">行业动态</a>
+                <a href="#subscribe">订阅</a>
+                <a href="#" class="nav-cta">登录/注册</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span>策略游戏行业专业社区</span>
+            </div>
+            <h1>
+                SLG <span class="highlight">战略前线</span><br>
+                专业社区
+            </h1>
+            <p class="hero-desc">
+                面向策略游戏从业者的深度交流平台，汇聚策划、发行、美术顶尖人才，推动行业知识共享与创新发展。
+            </p>
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <span class="stat-value" data-target="12847">0</span>
+                    <span class="stat-label">活跃用户</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" data-target="35692">0</span>
+                    <span class="stat-label">精华帖子</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" data-target="89">0</span>
+                    <span class="stat-label">企业会员</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" data-target="156">0</span>
+                    <span class="stat-label">行业大咖</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Forum Sections -->
+    <section id="forums">
+        <div class="section-header">
+            <h2 class="section-title">论坛战区</h2>
+        </div>
+        <div class="forum-grid">
+            <div class="forum-card">
+                <div class="forum-icon planning">📋</div>
+                <h3>策划阵地</h3>
+                <p>游戏机制设计、数值平衡、系统架构、玩法创新，从核心设计到细节打磨的深度讨论。</p>
+                <div class="forum-meta">
+                    <span class="forum-meta-item"><strong>2,847</strong> 主题</span>
+                    <span class="forum-meta-item"><strong>18.2K</strong> 回复</span>
+                </div>
+            </div>
+            <div class="forum-card">
+                <div class="forum-icon publishing">📊</div>
+                <h3>发行前线</h3>
+                <p>市场分析、用户获取、变现策略、海外发行、数据分析实战经验分享。</p>
+                <div class="forum-meta">
+                    <span class="forum-meta-item"><strong>1,523</strong> 主题</span>
+                    <span class="forum-meta-item"><strong>9.8K</strong> 回复</span>
+                </div>
+            </div>
+            <div class="forum-card">
+                <div class="forum-icon art">🎨</div>
+                <h3>美术工坊</h3>
+                <p>概念设计、角色建模、场景制作、UI/UX设计、动效特效，从风格定义到落地执行。</p>
+                <div class="forum-meta">
+                    <span class="forum-meta-item"><strong>3,156</strong> 主题</span>
+                    <span class="forum-meta-item"><strong>22.4K</strong> 回复</span>
+                </div>
+            </div>
+            <div class="forum-card">
+                <div class="forum-icon tech">⚙️</div>
+                <h3>技术军械库</h3>
+                <p>服务端架构、客户端优化、AI应用、工具链开发、跨平台方案技术研讨。</p>
+                <div class="forum-meta">
+                    <span class="forum-meta-item"><strong>1,892</strong> 主题</span>
+                    <span class="forum-meta-item"><strong>14.6K</strong> 回复</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Posts -->
+    <section id="featured" class="featured-posts">
+        <div class="posts-container">
+            <div class="section-header">
+                <h2 class="section-title">精华帖子</h2>
+            </div>
+            <div class="posts-tabs">
+                <button class="tab-btn active">全部精华</button>
+                <button class="tab-btn">策划</button>
+                <button class="tab-btn">发行</button>
+                <button class="tab-btn">美术</button>
+                <button class="tab-btn">技术</button>
+            </div>
+            <div class="posts-list">
+                <div class="post-item">
+                    <div class="post-avatar">王</div>
+                    <div class="post-content">
+                        <h4>【深度】SLG数值体系设计方法论：从COC到率土之滨的演进</h4>
+                        <div class="post-meta">
+                            <span class="post-tag">精华</span>
+                            <span>策划阵地</span>
+                            <span>王小明 · 3小时前</span>
+                        </div>
+                    </div>
+                    <div class="post-stats">
+                        <span>👁 2.4K</span>
+                        <span>💬 186</span>
+                        <span>⭐ 89</span>
+                    </div>
+                </div>
+                <div class="post-item">
+                    <div class="post-avatar">李</div>
+                    <div class="post-content">
+                        <h4>2026 SLG海外发行趋势报告：T1市场用户画像与获客成本分析</h4>
+                        <div class="post-meta">
+                            <span class="post-tag">行业报告</span>
+                            <span>发行前线</span>
+                            <span>李云飞 · 5小时前</span>
+                        </div>
+                    </div>
+                    <div class="post-stats">
+                        <span>👁 3.1K</span>
+                        <span>💬 245</span>
+                        <span>⭐ 156</span>
+                    </div>
+                </div>
+                <div class="post-item">
+                    <div class="post-avatar">张</div>
+                    <div class="post-content">
+                        <h4>【教程】三国题材SLG美术风格定调：从写实到国风的视觉演变</h4>
+                        <div class="post-meta">
+                            <span class="post-tag">教程</span>
+                            <span>美术工坊</span>
+                            <span>张设计 · 昨天</span>
+                        </div>
+                    </div>
+                    <div class="post-stats">
+                        <span>👁 1.8K</span>
+                        <span>💬 98</span>
+                        <span>⭐ 67</span>
+                    </div>
+                </div>
+                <div class="post-item">
+                    <div class="post-avatar">陈</div>
+                    <div class="post-content">
+                        <h4>Unity DOTS在SLG大规模战斗中的应用实践与性能优化</h4>
+                        <div class="post-meta">
+                            <span class="post-tag">技术分享</span>
+                            <span>技术军械库</span>
+                            <span>陈架构 · 2天前</span>
+                        </div>
+                    </div>
+                    <div class="post-stats">
+                        <span>👁 1.2K</span>
+                        <span>💬 78</span>
+                        <span>⭐ 45</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Industry News -->
+    <section id="news">
+        <div class="section-header">
+            <h2 class="section-title">行业动态</h2>
+        </div>
+        <div class="news-grid">
+            <div class="news-card">
+                <div class="news-image">
+                    <span class="news-badge">新品</span>
+                </div>
+                <div class="news-body">
+                    <p class="news-date">2026年4月8日</p>
+                    <h4 class="news-title">腾讯《三国志·战略版》海外版Q1收入突破2亿美元</h4>
+                    <p class="news-excerpt">Sensor Tower数据显示，该作在日本、韩国市场表现亮眼，延续SLG出海强势表现...</p>
+                </div>
+            </div>
+            <div class="news-card">
+                <div class="news-image">
+                    <span class="news-badge">观点</span>
+                </div>
+                <div class="news-body">
+                    <p class="news-date">2026年4月7日</p>
+                    <h4 class="news-title">4X策略手游迎来第二春？莉莉丝、FunPlus争相布局新品类</h4>
+                    <p class="news-excerpt">多家头部厂商加大对4X+SLG融合玩法的投入，品类边界正在被重新定义...</p>
+                </div>
+            </div>
+            <div class="news-card">
+                <div class="news-image">
+                    <span class="news-badge">招聘</span>
+                </div>
+                <div class="news-body">
+                    <p class="news-date">2026年4月6日</p>
+                    <h4 class="news-title">行业人才流动报告：SLG策划薪资涨幅领跑游戏行业</h4>
+                    <p class="news-excerpt">资深SLG策划年薪中位数达80万，数值策划、系统策划岗位需求持续走高...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Subscribe Section -->
+    <section id="subscribe" class="subscribe-section">
+        <div class="subscribe-container">
+            <h2>订阅行业周报</h2>
+            <p>每周精选SLG行业动态、深度文章、招聘信息，直达您的邮箱。</p>
+            <form class="subscribe-form" onsubmit="event.preventDefault(); alert('感谢订阅！');">
+                <input type="email" placeholder="输入您的邮箱地址" required>
+                <button type="submit">立即订阅</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-brand">
+                <a href="#" class="logo">
+                    <div class="logo-icon">SLG</div>
+                    <span class="logo-text">战略<span>前线</span></span>
+                </a>
+                <p>SLG战略前线是面向策略游戏从业者的专业社区，致力于推动行业知识共享与人才成长。</p>
+            </div>
+            <div class="footer-column">
+                <h4>论坛</h4>
+                <div class="footer-links">
+                    <a href="#">策划阵地</a>
+                    <a href="#">发行前线</a>
+                    <a href="#">美术工坊</a>
+                    <a href="#">技术军械库</a>
+                </div>
+            </div>
+            <div class="footer-column">
+                <h4>资源</h4>
+                <div class="footer-links">
+                    <a href="#">行业报告</a>
+                    <a href="#">设计模板</a>
+                    <a href="#">工具下载</a>
+                    <a href="#">招聘信息</a>
+                </div>
+            </div>
+            <div class="footer-column">
+                <h4>关于</h4>
+                <div class="footer-links">
+                    <a href="#">关于我们</a>
+                    <a href="#">合作洽谈</a>
+                    <a href="#">联系方式</a>
+                    <a href="#">用户协议</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 SLG战略前线. 保留所有权利.</p>
+            <div class="social-links">
+                <a href="#" title="微信">微</a>
+                <a href="#" title="微博">博</a>
+                <a href="#" title="知乎">知</a>
+                <a href="#" title="B站">B</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Nav scroll effect
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 50) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
+
+        // Animated counter
+        function animateCounters() {
+            const counters = document.querySelectorAll('.stat-value');
+            counters.forEach(counter => {
+                const target = parseInt(counter.getAttribute('data-target'));
+                const duration = 2000;
+                const step = target / (duration / 16);
+                let current = 0;
+                
+                const updateCounter = () => {
+                    current += step;
+                    if (current < target) {
+                        counter.textContent = Math.floor(current).toLocaleString();
+                        requestAnimationFrame(updateCounter);
+                    } else {
+                        counter.textContent = target.toLocaleString();
+                    }
+                };
+                
+                updateCounter();
+            });
+        }
+
+        // Intersection Observer for animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    if (entry.target.classList.contains('hero-stats')) {
+                        animateCounters();
+                    }
+                    entry.target.classList.add('animate');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.hero-stats, .forum-card, .news-card').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Tab functionality
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
